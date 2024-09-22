@@ -31,7 +31,13 @@ class makeMore:
     def createBigramTensor(self):
         self.N = torch.zeros((27,27), dtype = torch.int32)
         self.generateBigram()
-        print(self.N)
+        self.createProbabilityTensor()
+
+    def createProbabilityTensor(self):
+        self.P = self.N.float()
+        for i in range(27):
+            self.P[i] = self.N[i] / self.N[i].sum()
+            
 
     def plotBigramTensor(self):
         plt.figure(figsize=(32,32))
@@ -44,15 +50,23 @@ class makeMore:
         plt.axis('off')
         plt.show()
 
+    def plotProbabilityTensor(self):
+        plt.figure(figsize=(64,64))
+        plt.imshow(self.P, cmap='Blues')
+        for i in range(27):
+            for j in range(27):
+                chrStr = self.IToStr[i] + self.IToStr[j]
+                plt.text(j, i, chrStr, ha = "center", va = "bottom", color = 'gray')
+                plt.text(j, i, round(self.P[i, j].item(), 3), ha="center", va="top", color="gray")
+        plt.axis('off')
+        plt.show()
+
     def sampleModel(self):
         g = torch.Generator().manual_seed(21747483647)
         ix = 0
         output = []
         while True:
-            p = self.N[ix].float()
-            #get probability distribution
-            p = p / p.sum()
-
+            p = self.P[ix]
             #using multinomial function to assign next char given probabbility distribution
             ix = torch.multinomial(p, 1, replacement = True, generator=g).item()
             output.append(self.IToStr[ix])
@@ -72,4 +86,5 @@ instance = makeMore()
 instance.generateBigram()
 instance.createBigramTensor()
 #instance.plotBigramTensor()
-print(instance.sampleModel())
+#print(instance.sampleModel())
+instance.plotProbabilityTensor()
