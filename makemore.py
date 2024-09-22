@@ -28,6 +28,25 @@ class makeMore:
                 ix2 = self.StrToI[ch2]
                 self.N[ix1, ix2] += 1
 
+    def printLoss(self):
+        #create loss function using negative log likelihood
+        n=0
+        logLikelihood = 0.0
+        for w in self.words:
+            #get all the bigrams in current word
+            chs = ['.'] + list(w) + ['.']
+            for ch1, ch2 in zip(chs, chs[1:]):
+                ix1 = self.StrToI[ch1]
+                ix2 = self.StrToI[ch2]
+                prob = self.P[ix1, ix2]
+                logProb = torch.log(prob)
+                logLikelihood += logProb
+                n += 1
+
+        nll = -logLikelihood
+        print(f'NLL: {nll=}')
+        print(f'NLL Average{nll / n}')
+
     def createBigramTensor(self):
         self.N = torch.zeros((27,27), dtype = torch.int32)
         self.generateBigram()
@@ -36,7 +55,8 @@ class makeMore:
     def createProbabilityTensor(self):
         self.P = self.N.float()
         for i in range(27):
-            self.P[i] = self.N[i] / self.N[i].sum()
+            #add model smoothing to avoid infinite nll
+            self.P[i] = (self.N[i] + 1) / self.N[i].sum()
             
 
     def plotBigramTensor(self):
@@ -87,4 +107,5 @@ instance.generateBigram()
 instance.createBigramTensor()
 #instance.plotBigramTensor()
 #print(instance.sampleModel())
-instance.plotProbabilityTensor()
+#instance.plotProbabilityTensor()
+instance.printLoss()
